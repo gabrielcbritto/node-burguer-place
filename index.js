@@ -1,4 +1,5 @@
 const express = require('express')
+const { REPL_MODE_SLOPPY } = require('repl')
 const uuid = require('uuid')
 
 const port = 3000
@@ -24,7 +25,11 @@ const checkIdTrue = (request, response, next) => {
     next()
 }
 
-app.post('/order', (request, response) => {
+const methodAndUrl = (request, response, next) => {
+    console.log(`Method: ${request.method}`, `Url: ${request.url}`)
+    next()
+}
+app.post('/order',methodAndUrl,(request, response) => {
     const { order, clientName, price} = request.body
     const orderF = { id: uuid.v4(), order, clientName, price, status: "Em prep"}
     orders.push(orderF)
@@ -33,9 +38,10 @@ app.post('/order', (request, response) => {
 
 
 
-app.get ('/order', (request, response) => response.json(orders))
+app.get ('/order', methodAndUrl,(request, response) => response.json(orders))
 
-app.put('/order/:id', checkIdTrue, (request, response)=> {
+app.put('/order/:id', checkIdTrue, methodAndUrl, (request, response)=> {
+    
     const id = request.orderId
 
     const {order, clientName, price} = request.body
@@ -50,19 +56,19 @@ app.put('/order/:id', checkIdTrue, (request, response)=> {
 })
 
 
-app.delete('/order/:id', checkIdTrue, (request, response) => {
+app.delete('/order/:id',methodAndUrl, checkIdTrue, (request, response) => {
     const index = request.orderIndex
     orders.splice(index, 1)
     return response.status(201).json({message:"Order Deleted"})
 })
 
-app.get ('/order/:id', checkIdTrue, (request, response)=> {
+app.get ('/order/:id',methodAndUrl, checkIdTrue, (request, response)=> {
     const index = request.orderIndex
     console.log(orders[index])
     return response.json(orders[index])
 })
 
-app.patch ('/order/:id', checkIdTrue, (request, response) => {
+app.patch ('/order/:id',methodAndUrl, checkIdTrue, (request, response) => {
     const orderChanges = orders[request.orderIndex]
     orderChanges.status = "Pronto"
     console.log(orderChanges)
